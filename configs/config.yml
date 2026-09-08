@@ -1,0 +1,34 @@
+name: config
+
+# logistic_regression, random_forest, gradient_boosting
+model_type: gradient_boosting
+target_column: num
+metric_average: weighted
+
+test_size: 0.2
+random_state: 42
+
+# median, drop
+handle_missing: median
+
+scale_features: true
+
+# columns to exclude from training
+features_to_drop: [id, dataset]
+
+# Model-specific hyperparameters
+lr_C: 0.1                    # logistic regression regularization
+rf_n_estimators: 50         # random forest number of trees (100)
+rf_max_depth: 5
+
+# gradient boosting number of trees (100)
+gb_n_estimators: 500
+
+# gradient boosting learning rate (0.1)
+gb_learning_rate: 0.01
+
+gb_max_depth: 7              # gradient boosting max depth (3)
+
+# Min and Max allowable ACC Score for model to be considered successful
+min_accuracy: 0.7
+min_f1: 0.7

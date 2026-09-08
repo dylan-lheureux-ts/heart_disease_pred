@@ -1,0 +1,23 @@
+artifact_path: file:C:/heart_disease_pred/mlruns/1/models/m-8af8618ef2ae4cb6a6712b45835bcd09/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.skops
+    predict_fn: predict
+    python_version: 3.14.5
+  sklearn:
+    code: null
+    pickled_model: model.skops
+    serialization_format: skops
+    sklearn_version: 1.9.0
+    skops_trusted_types: null
+mlflow_version: 3.15.2
+model_id: m-8af8618ef2ae4cb6a6712b45835bcd09
+model_size_bytes: 16149
+model_uuid: m-8af8618ef2ae4cb6a6712b45835bcd09
+prompts: null
+run_id: 6c79e17813204ca7badcd4bf5c71f65e
+utc_time_created: '2026-09-08 16:19:20.489155'
