@@ -49,12 +49,9 @@ config = load_config()
 def load_and_prepare_data(config):
     """Load the heart disease prediction dataset and prepare it for training."""
 
-    path = kagglehub.dataset_download(
-        "redwankarimsony/heart-disease-data"
-    )
-    print(path)
+    url = Path(__file__).resolve(
+    ).parents[1] / "data" / "heart_disease_uci.csv"
 
-    url = f"{path}/heart_disease_uci.csv"
     df = pd.read_csv(url)
 
     print(f"Loaded {len(df)} rows, {len(df.columns)} columns")
