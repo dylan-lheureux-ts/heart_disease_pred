@@ -1,4 +1,4 @@
 [core]
-    remote = myremote
-['remote "myremote"']
-    url = C:\tmp\dvc-remote
+    remote = s3remote
+['remote "s3remote"']
+    url = s3://heart-disease-pred-dvc-dylan-lheureux
