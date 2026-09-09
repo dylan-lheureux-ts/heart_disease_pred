@@ -296,19 +296,14 @@ def actual_dataset():
     Load the actual Kaggle heart disease dataset.
     """
 
-    import kagglehub
+    path = Path(__file__).resolve(
+    ).parents[1] / "data" / "heart_disease_uci.csv"
 
-    path = kagglehub.dataset_download(
-        "redwankarimsony/heart-disease-data"
+    assert path.exists(), (
+        f"Dataset not found at {path}"
     )
 
-    csv_path = Path(path) / "heart_disease_uci.csv"
-
-    assert csv_path.exists(), (
-        f"Dataset not found at {csv_path}"
-    )
-
-    return pd.read_csv(csv_path)
+    return pd.read_csv(path)
 
 
 class TestActualDataset:

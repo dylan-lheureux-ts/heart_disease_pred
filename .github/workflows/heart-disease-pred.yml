@@ -1,4 +1,4 @@
-name: ML Pipeline
+name: Heart Disease Prediction Pipeline
 
 # When should this pipeline run?
 on:
