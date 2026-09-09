@@ -78,13 +78,17 @@ if __name__ == "__main__":
 
     # Exit code based on status
     if result["status"] == "critical":
-        print(f"\nCRITICAL: {result['drift_share']*100:.1f}% of features drifted "
-              f"(threshold: {DRIFT_SHARE_CRITICAL*100:.0f}%)")
+        print(
+            f"\nCRITICAL: {result['drift_share']*100:.1f}% of features "
+            f"drifted (threshold: {DRIFT_SHARE_CRITICAL*100:.0f}%)"
+        )
         print("Action required: investigate and consider retraining.")
         sys.exit(1)
     elif result["status"] == "warning":
-        print(f"\nWARNING: {result['drift_share']*100:.1f}% of features drifted "
-              f"(threshold: {DRIFT_SHARE_WARNING*100:.0f}%)")
+        print(
+            f"\nWARNING: {result['drift_share']*100:.1f}% of features "
+            f"drifted (threshold: {DRIFT_SHARE_WARNING*100:.0f}%)"
+        )
         print("Monitor closely. Retraining may be needed soon.")
         sys.exit(0)  # warning but not failure
     else:
