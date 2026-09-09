@@ -3,9 +3,9 @@ name: Heart Disease Prediction Pipeline
 # When should this pipeline run?
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:  # allows manual triggering from GitHub UI
 
 jobs:
