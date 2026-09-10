@@ -168,9 +168,13 @@ if __name__ == "__main__":
     print(f"Month 3 (significant drift): {len(month3)} rows")
 
     # Save for use in other scripts
-    reference.to_csv("reference_data.csv", index=False)
-    month1.to_csv("month1_data.csv", index=False)
-    month2.to_csv("month2_data.csv", index=False)
-    month3.to_csv("month3_data.csv", index=False)
+    reports_dir = Path(__file__).resolve().parent / "reports"
+    reports_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\nData saved. Ready for drift analysis.")
+    reference.to_csv(reports_dir / "reference_data.csv", index=False)
+    month1.to_csv(reports_dir / "month1_data.csv", index=False)
+    month2.to_csv(reports_dir / "month2_data.csv", index=False)
+    month3.to_csv(reports_dir / "month3_data.csv", index=False)
+
+    print(f"\nData saved to: {reports_dir}")
+    print("Ready for drift analysis.")

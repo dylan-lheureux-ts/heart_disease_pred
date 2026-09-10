@@ -1,6 +1,6 @@
 import pandas as pd
 from evidently import Report
-from evidently.presets.data_drift import DataDriftPreset
+from evidently.presets import DataDriftPreset
 
 # Load the data
 reference = pd.read_csv("reference_data.csv")
