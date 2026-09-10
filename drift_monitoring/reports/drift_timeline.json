@@ -1,29 +1,26 @@
 [
-  {
-    "period": "Month 1",
-    "ref_mean": 53.156,
-    "current_mean": 53.639,
-    "ref_std": 9.564,
-    "current_std": 9.29,
-    "P-value": 0.824833,
-    "drift_detected": false
-  },
-  {
-    "period": "Month 2",
-    "ref_mean": 53.156,
-    "current_mean": 54.762,
-    "ref_std": 9.564,
-    "current_std": 8.295,
-    "P-value": 0.343763,
-    "drift_detected": false
-  },
-  {
-    "period": "Month 3",
-    "ref_mean": 53.156,
-    "current_mean": 57.718,
-    "ref_std": 9.564,
-    "current_std": 10.944,
-    "P-value": 6e-06,
-    "drift_detected": true
-  }
+    {
+        "month": "Month 1",
+        "feature": "age",
+        "reference_mean": 53.155797101449274,
+        "current_mean": 53.63934426229508,
+        "p_value": 0.8248327126665722,
+        "drift_detected": false
+    },
+    {
+        "month": "Month 2",
+        "feature": "age",
+        "reference_mean": 53.155797101449274,
+        "current_mean": 54.76229508196721,
+        "p_value": 0.34376332224646927,
+        "drift_detected": false
+    },
+    {
+        "month": "Month 3",
+        "feature": "age",
+        "reference_mean": 53.155797101449274,
+        "current_mean": 57.71774193548387,
+        "p_value": 5.984214741767579e-06,
+        "drift_detected": true
+    }
 ]

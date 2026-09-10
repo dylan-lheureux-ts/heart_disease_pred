@@ -1,61 +1,161 @@
 import pandas as pd
-import numpy as np
-import json
 from evidently import Report
 from evidently.metrics import ValueDrift
 from pathlib import Path
+import json
 
 
-# Load the data
-reports_dir = Path(__file__).resolve().parent / "reports"
-reports_dir.mkdir(parents=True, exist_ok=True)
+# ============================================================
+# Configuration
+# ============================================================
 
-reference = pd.read_csv(reports_dir / "reference_data.csv")
-month1 = pd.read_csv(reports_dir / "month1_data.csv")
-month2 = pd.read_csv(reports_dir / "month2_data.csv")
-month3 = pd.read_csv(reports_dir / "month3_data.csv")
+FEATURE_TO_TRACK = "age"
 
-# Track a single important feature across all three months
-feature_to_track = "age"
+REPORTS_DIR = Path(__file__).resolve().parent / "reports"
 
-print(f"Tracking drift for '{feature_to_track}' over time")
-print("=" * 60)
 
-timeline = []
+# ============================================================
+# Drift over time
+# ============================================================
 
-for data, label in [(month1, "Month 1"), (month2, "Month 2"), (month3, "Month 3")]:
-    report = Report(metrics=[ValueDrift(column=feature_to_track)])
-    snapshot = report.run(reference_data=reference, current_data=data)
-    result = snapshot.dict()
+def run_drift_over_time():
 
-    metric = result["metrics"][0]
-    drift_score = float(metric["value"])
-    threshold = metric["config"]["threshold"]
+    reference = pd.read_csv(
+        REPORTS_DIR / "reference_data.csv"
+    )
 
-    entry = {
-        "period": label,
-        "ref_mean": round(reference[feature_to_track].mean(), 3),
-        "current_mean": round(data[feature_to_track].mean(), 3),
-        "ref_std": round(reference[feature_to_track].std(), 3),
-        "current_std": round(data[feature_to_track].std(), 3),
-        "P-value": round(drift_score, 6),
-        "drift_detected": drift_score < threshold,
+    months = {
+        "Month 1": pd.read_csv(
+            REPORTS_DIR / "month1_data.csv"
+        ),
+        "Month 2": pd.read_csv(
+            REPORTS_DIR / "month2_data.csv"
+        ),
+        "Month 3": pd.read_csv(
+            REPORTS_DIR / "month3_data.csv"
+        ),
     }
-    timeline.append(entry)
 
-    status = "DRIFT" if entry["drift_detected"] else "OK"
-    print(f"\n{label}:")
+    timeline = []
+
+    print("\nTracking feature:", FEATURE_TO_TRACK)
+
+    for month_name, current_data in months.items():
+
+        report = Report(
+            metrics=[
+                ValueDrift(
+                    column=FEATURE_TO_TRACK
+                )
+            ]
+        )
+
+        snapshot = report.run(
+            reference_data=reference,
+            current_data=current_data
+        )
+
+        result = snapshot.dict()
+
+        metric = result["metrics"][0]
+
+        p_value = float(
+            metric["value"]
+        )
+
+        reference_mean = reference[
+            FEATURE_TO_TRACK
+        ].mean()
+
+        current_mean = current_data[
+            FEATURE_TO_TRACK
+        ].mean()
+
+        drift_detected = p_value < 0.05
+
+        status = (
+            "DRIFT"
+            if drift_detected
+            else "OK"
+        )
+
+        print(
+            f"\n{month_name}:"
+        )
+
+        print(
+            f"  Reference mean: "
+            f"{reference_mean:.3f}"
+        )
+
+        print(
+            f"  Current mean:   "
+            f"{current_mean:.3f}"
+        )
+
+        print(
+            f"  P-value:        "
+            f"{p_value:.6f}"
+        )
+
+        print(
+            f"  Status:         "
+            f"{status}"
+        )
+
+        timeline.append(
+            {
+                "month": month_name,
+                "feature": FEATURE_TO_TRACK,
+                "reference_mean": reference_mean,
+                "current_mean": current_mean,
+                "p_value": p_value,
+                "drift_detected": drift_detected,
+            }
+        )
+
+    # --------------------------------------------------------
+    # Save timeline
+    # --------------------------------------------------------
+
+    output_file = (
+        REPORTS_DIR
+        / "drift_timeline.json"
+    )
+
+    with open(
+        output_file,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        json.dump(
+            timeline,
+            file,
+            indent=4
+        )
+
     print(
-        f"  Reference mean: {entry['ref_mean']}  |  Current mean: {entry['current_mean']}")
+        f"\nTimeline saved to: "
+        f"{output_file}"
+    )
+
     print(
-        f"  Reference std:  {entry['ref_std']}  |  Current std:  {entry['current_std']}")
-    print(f"  P-value:        {entry['P-value']}")
-    print(f"  Status:         {status}")
+        "\nNotice how the age distribution "
+        "changes over time."
+    )
 
-# Save timeline for potential dashboard use
-with open(reports_dir / "drift_timeline.json", "w") as f:
-    json.dump(timeline, f, indent=2)
+    print(
+        "Lower p-values indicate stronger "
+        "statistical evidence of drift."
+    )
 
-print(f"\nTimeline saved to {reports_dir / 'drift_timeline.json'}")
-print("\nNotice how the drift score is monitored over time.")
-print("Lower p-values indicate stronger statistical evidence of drift.")
+    return timeline
+
+
+# ============================================================
+# Allow standalone execution
+# ============================================================
+
+if __name__ == "__main__":
+    run_drift_over_time()

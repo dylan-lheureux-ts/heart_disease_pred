@@ -1,0 +1,39 @@
+# Drift Monitoring Analysis
+
+## Overview
+
+Drift monitoring was performed by comparing the reference dataset used during model development with simulated Month 3 production data. Evidently was used to evaluate whether the distribution of the model's input features had changed after deployment.
+The monitoring pipeline evaluates 13 input features and excludes the target variable, `num`, from feature drift calculations.
+The overall dataset drift threshold was configured at 40%. If at least 40% of monitored features show statistically significant drift, the monitoring process flags the dataset for further investigation.
+
+## Which features showed drift and why?
+
+Month 3 showed drift in six of the 13 monitored features:
+* `age`
+* `trestbps`
+* `chol`
+* `thalch`
+* `oldpeak`
+* `ca`
+
+The drift was primarily caused by the simulated production-data changes introduced during the monitoring experiment.
+For example, Month 3 intentionally increased cholesterol (`chol`) and resting blood pressure (`trestbps`). The age distribution was also shifted toward older patients for a portion of the production data. Additional changes were introduced to maximum heart rate (`thalch`), ST depression (`oldpeak`), and the number of major vessels (`ca`)
+These changes simulate a realistic situation in which the population or characteristics of patients being evaluated after deployment differ from the population represented in the original training data.
+Overall, 6 out of 13 features showed statistically significant drift, resulting in an overall drift share of 46.2%.
+
+## Would this drift likely affect model performance?
+
+Yes, the observed drift could affect model performance.
+Several of the features showing drift are clinically meaningful predictors of heart disease. Changes in variables such as age, cholesterol, resting blood pressure, maximum heart rate, and ST depression could change the relationship between the input data and the model's predictions.
+Even if the model's accuracy has not yet decreased, substantial changes in the input distribution can make predictions less reliable because the model is receiving data that differs from the distribution it learned during training.
+The fact that 46.2% of monitored features showed drift is significant because it exceeds the configured 40% dataset-level threshold.
+
+## Recommended action
+
+I would recommend investigating the drift and preparing for retraining rather than immediately retraining the model.
+First, the drift should be investigated to determine whether the changes represent a genuine change in the patient population, a data collection or preprocessing issue, or another operational change.
+Model performance metrics should then be evaluated on recent production data. If performance has degraded alongside the observed feature drift, the model should be retrained using representative and recent data.
+If model performance remains stable, monitoring should continue while the cause and persistence of the drift are investigated.
+Therefore, the recommended workflow is:
+
+**Detect drift → Investigate cause → Evaluate model performance → Retrain if performance has degraded.**
