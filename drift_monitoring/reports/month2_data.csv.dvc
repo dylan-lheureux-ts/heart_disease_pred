@@ -1,0 +1,5 @@
+outs:
+- md5: 7e7b6f526e4b9363ef350d168d7bdeeb
+  size: 12322
+  hash: md5
+  path: month2_data.csv
