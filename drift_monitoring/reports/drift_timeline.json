@@ -1,0 +1,29 @@
+[
+  {
+    "period": "Month 1",
+    "ref_mean": 53.156,
+    "current_mean": 53.639,
+    "ref_std": 9.564,
+    "current_std": 9.29,
+    "P-value": 0.824833,
+    "drift_detected": false
+  },
+  {
+    "period": "Month 2",
+    "ref_mean": 53.156,
+    "current_mean": 54.762,
+    "ref_std": 9.564,
+    "current_std": 8.295,
+    "P-value": 0.343763,
+    "drift_detected": false
+  },
+  {
+    "period": "Month 3",
+    "ref_mean": 53.156,
+    "current_mean": 57.718,
+    "ref_std": 9.564,
+    "current_std": 10.944,
+    "P-value": 6e-06,
+    "drift_detected": true
+  }
+]

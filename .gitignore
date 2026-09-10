@@ -19,6 +19,7 @@ metrics/
 __pycache__/
 *.pyc
 .venv/
+.venv_old/
 
 # Jupyter
 .ipynb_checkpoints/

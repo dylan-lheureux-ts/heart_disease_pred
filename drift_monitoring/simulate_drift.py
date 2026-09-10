@@ -5,34 +5,29 @@ from pathlib import Path
 
 def load_and_prepare():
     """
-    Load the heart disease dataset and prepare it for analysis.
-    Returns a cleaned DataFrame.
+    Load the original heart disease dataset.
+
+    Keeps numerical and categorical features in their original
+    representation so drift can be simulated and monitored
+    before model preprocessing.
     """
-    url = Path(__file__).resolve(
-    ).parents[1] / "data" / "heart_disease_uci.csv"
+
+    url = (
+        Path(__file__).resolve().parents[1]
+        / "data"
+        / "heart_disease_uci.csv"
+    )
+
     df = pd.read_csv(url).copy()
 
-    # Basic cleaning: drop rows with missing target
-    df["num"] = (df["num"] > 0).astype(int)
+    # Remove rows with a missing target
     df = df.dropna(subset=["num"])
 
+    # Convert the target to binary
+    df["num"] = (df["num"] > 0).astype(int)
+
+    # Remove columns not used by the model
     df = df.drop(columns=["id", "dataset"], errors="ignore")
-
-    categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
-    df = pd.get_dummies(df, columns=categorical_cols,
-                        drop_first=True, dtype=int)
-
-    # Fill missing values for numeric columns with median
-    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
-    for col in numeric_cols:
-        df[col] = df[col].fillna(df[col].median())
-
-    # Fill missing values for categorical columns with mode
-    categorical_cols = df.select_dtypes(include=[object]).columns.tolist()
-    for col in categorical_cols:
-        mode_val = df[col].mode()
-        if len(mode_val) > 0:
-            df[col] = df[col].fillna(mode_val[0])
 
     return df
 
@@ -105,6 +100,15 @@ def introduce_drift(month2, month3):
     )
     month3["chol"] = month3["chol"].clip(100, 650)
 
+    # ST-segment depression (oldpeak) shifts upward.
+    # This simulates a production population with slightly more
+    # pronounced ST-segment depression during exercise.
+    month3["oldpeak"] = (
+        month3["oldpeak"]
+        + np.random.normal(0.5, 0.25, len(month3))
+    )
+    month3["oldpeak"] = month3["oldpeak"].clip(0, 6)
+
     # Resting blood pressure shifts more substantially.
     month3["trestbps"] = (
         month3["trestbps"]
@@ -115,9 +119,10 @@ def introduce_drift(month2, month3):
     # Age distribution shifts upward.
     # This simulates a production population containing more
     # older patients than the original training population.
-    older_patients = np.random.uniform(
+
+    older_patients = np.random.randint(
         60,
-        75,
+        76,
         int(len(month3) * 0.25)
     )
 
@@ -130,18 +135,22 @@ def introduce_drift(month2, month3):
     month3.loc[age_indices, "age"] = older_patients
 
     # More patients experience exercise-induced angina.
-    # The original column is binary: 0 = no, 1 = yes.
+    # The original column is binary: False = no, True = yes.
+
+    month3["exang"] = month3["exang"].astype("boolean")
+
     angina_indices = np.random.choice(
         month3.index,
         size=int(len(month3) * 0.15),
         replace=False
     )
 
-    month3.loc[angina_indices, "exang"] = 1
+    month3.loc[angina_indices, "exang"] = True
 
     # Maximum heart rate shifts downward slightly.
     # This is consistent with a population containing more older
     # and higher-risk patients.
+
     month3["thalch"] = (
         month3["thalch"]
         - np.random.normal(8, 5, len(month3))

@@ -2,52 +2,77 @@ import pandas as pd
 import json
 from evidently import Report
 from evidently.presets import DataDriftPreset
+from pathlib import Path
 
 
-reference = pd.read_csv("reference_data.csv")
-month1 = pd.read_csv("month1_data.csv")
-month2 = pd.read_csv("month2_data.csv")
-month3 = pd.read_csv("month3_data.csv")
+# Load the data
+reports_dir = Path(__file__).resolve().parent / "reports"
+
+reference = pd.read_csv(reports_dir / "reference_data.csv")
+month1 = pd.read_csv(reports_dir / "month1_data.csv")
+month2 = pd.read_csv(reports_dir / "month2_data.csv")
+month3 = pd.read_csv(reports_dir / "month3_data.csv")
 
 
 def get_drift_summary(reference, current, label):
     """Run drift detection and return a summary dictionary."""
+    DATASET_DRIFT_THRESHOLD = 0.4  # 40% of features drifted indicates dataset drift
+
+    # Exclude the target from feature drift monitoring
+    feature_columns = [
+        column for column in reference.columns
+        if column != "num"
+    ]
+
+    reference_features = reference[feature_columns]
+    current_features = current[feature_columns]
+
     report = Report(metrics=[DataDriftPreset()])
-    snapshot = report.run(reference_data=reference, current_data=current)
+
+    snapshot = report.run(
+        reference_data=reference_features,
+        current_data=current_features
+    )
 
     result = snapshot.dict()
 
-    # First metric is DriftedColumnsCount with overall drift info
+    # First metric is DriftedColumnsCount
     drift_count_metric = result["metrics"][0]
-    drifted_count = int(drift_count_metric["value"]["count"])
-    drift_share = drift_count_metric["value"]["share"]
 
-    # Remaining metrics are per-column ValueDrift
-    feature_metrics = result["metrics"][1:]
-    total_features = len(feature_metrics)
+    drifted_count = int(drift_count_metric["value"]["count"])
+    drift_share = drifted_count / len(feature_columns)
 
     summary = {
         "period": label,
-        "total_features": total_features,
+        "total_features": len(feature_columns),
         "drifted_features": drifted_count,
         "drift_share": round(drift_share, 3),
-        "dataset_drift": drift_share >= 0.5,
+        "dataset_drift": drift_share >= DATASET_DRIFT_THRESHOLD,
     }
 
     # Extract per-feature drift details
+    feature_metrics = result["metrics"][1:]
+
     feature_details = {}
+
     for metric in feature_metrics:
         column = metric["config"]["column"]
         threshold = metric["config"]["threshold"]
         drift_value = float(metric["value"])
+
+        # For p-values:
+        # p-value < 0.05 means statistically significant drift
+        is_drifted = drift_value < threshold
+
         feature_details[column] = {
-            "drifted": drift_value >= threshold,
+            "drifted": is_drifted,
             "threshold": threshold,
             "drift_score": round(drift_value, 4),
             "method": metric["config"]["method"],
         }
 
     summary["features"] = feature_details
+
     return summary
 
 
