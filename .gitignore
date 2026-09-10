@@ -26,3 +26,7 @@ __pycache__/
 
 # OS
 .DS_Store
+
+# Reports
+drift_monitoring/reports/*.html
+drift_monitoring/reports/*.json
