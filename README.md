@@ -379,4 +379,4 @@ Model performance metrics should then be evaluated on recent production data. If
 If model performance remains stable, monitoring should continue while the cause and persistence of the drift are investigated.
 Therefore, the recommended workflow is:
 
-**Detect drift → Investigate cause → Evaluate model performance → R
+**Detect drift → Investigate cause → Evaluate model performance → Retrain if performance has degraded.**
