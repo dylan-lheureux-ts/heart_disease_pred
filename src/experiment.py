@@ -15,14 +15,15 @@ if __package__:
         encode_categoricals,
         validate_dataframe,
     )
+    from .evaluation import evaluate_model
 else:
     from preprocessing import clean_data, encode_categoricals, validate_dataframe
+    from evaluation import evaluate_model
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 # ─── Configuration ───────────────────────────────────────────────
 CONFIG_PATH = Path(__file__).resolve().parents[1] / "configs" / "config.yml"
@@ -48,8 +49,7 @@ config = load_config()
 def load_and_prepare_data(config):
     """Load the heart disease prediction dataset and prepare it for training."""
 
-    url = Path(__file__).resolve(
-    ).parents[1] / "data" / "heart_disease_uci.csv"
+    url = Path(__file__).resolve().parents[1] / "data" / "heart_disease_uci.csv"
 
     df = pd.read_csv(url)
 
@@ -179,62 +179,43 @@ def run_experiment(config):
         print(f"\nTraining {config['model_type']}...")
         model.fit(X_train, y_train)
 
-        # ── Evaluate ──
-        y_pred = model.predict(X_test)
-        y_prob = model.predict_proba(X_test)
-        class_count = len(model.classes_)
-        metric_average = config["metric_average"]
+        # ── Evaluate using the reusable evaluation module ──
+        evaluation_metrics = evaluate_model(
+            model,
+            X_test,
+            y_test,
+            metric_average=config["metric_average"],
+        )
+
         metrics = {
-            "accuracy": round(accuracy_score(y_test, y_pred), 4),
-            "precision": round(precision_score(y_test, y_pred), 4),
-            "recall": round(recall_score(y_test, y_pred), 4),
-            "f1_score": round(f1_score(y_test, y_pred), 4),
+            **evaluation_metrics,
             "train_size": len(X_train),
             "test_size": len(X_test),
             "n_features": X_train.shape[1],
         }
-        accuracy = accuracy_score(y_test, y_pred)
-        if class_count == 2:
-            precision = precision_score(
-                y_test, y_pred, average=metric_average, zero_division=0
-            )
-            recall = recall_score(
-                y_test, y_pred, average=metric_average, zero_division=0
-            )
-            f1 = f1_score(
-                y_test, y_pred, average=metric_average, zero_division=0
-            )
-            auc = roc_auc_score(y_test, y_prob[:, 1])
-        else:
-            precision = precision_score(
-                y_test, y_pred, average=metric_average, zero_division=0
-            )
-            recall = recall_score(
-                y_test, y_pred, average=metric_average, zero_division=0
-            )
-            f1 = f1_score(
-                y_test, y_pred, average=metric_average, zero_division=0
-            )
-            auc = roc_auc_score(
-                y_test,
-                y_prob,
-                multi_class="ovr",
-                average=metric_average,
-            )
+
+        accuracy = evaluation_metrics["accuracy"]
+        precision = evaluation_metrics["precision"]
+        recall = evaluation_metrics["recall"]
+        f1 = evaluation_metrics["f1_score"]
+        auc = evaluation_metrics["auc_roc"]
 
         # ── Log metrics ──
-        mlflow.log_metric("accuracy", round(accuracy, 4))
-        mlflow.log_metric("precision", round(precision, 4))
-        mlflow.log_metric("recall", round(recall, 4))
-        mlflow.log_metric("f1_score", round(f1, 4))
-        mlflow.log_metric("auc_roc", round(auc, 4))
+        mlflow.log_metric("accuracy", accuracy)
+        mlflow.log_metric("precision", precision)
+        mlflow.log_metric("recall", recall)
+        mlflow.log_metric("f1_score", f1)
+        mlflow.log_metric("auc_roc", auc)
+
         # Check thresholds
         if metrics["accuracy"] < config["min_accuracy"]:
             print(
-                f"\nWARNING: Accuracy {metrics['accuracy']} is below threshold {config['min_accuracy']}")
+                f"\nWARNING: Accuracy {metrics['accuracy']} is below threshold {config['min_accuracy']}"
+            )
         if metrics["f1_score"] < config["min_f1"]:
             print(
-                f"\nWARNING: F1 {metrics['f1_score']} is below threshold {config['min_f1']}")
+                f"\nWARNING: F1 {metrics['f1_score']} is below threshold {config['min_f1']}"
+            )
 
         # Save model
         os.makedirs("models", exist_ok=True)
